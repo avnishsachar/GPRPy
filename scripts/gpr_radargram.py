@@ -138,4 +138,4 @@ class gprpyProfile:
         plt.show(block=False)
 
 if __name__ == '__main__':
-    gprpyProfile("/home/avnishsachar/GPRPy/gprpy/data/VGT/Profile_0006.rd3")
+    gprpyProfile("/home/omni/Downloads/GPRPy/data/VGT/Profile_0006.rd3")

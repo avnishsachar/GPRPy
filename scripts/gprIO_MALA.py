@@ -30,8 +30,8 @@ def readMALA(file_name):
     
     nrows=int(len(data)/int(info['SAMPLES']))
     
-    data = (np.asmatrix(data.reshape(nrows,int(info['SAMPLES'])))).transpose()
-  
+    # data = (np.asmatrix(data.reshape(nrows,int(info['SAMPLES'])))).transpose()
+    data = data.reshape(nrows,int(info['SAMPLES']))
     return data,info
     
 def readGPRhdr(filename):
