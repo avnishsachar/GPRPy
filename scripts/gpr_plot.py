@@ -91,7 +91,7 @@ class gprpyPlot:
             if i%5 == 0:
                 trace.append(i)
                 amp_avg.append(amp[i])
-        return range_w, sin1
+        return traces_found, trace_sample
        
     def showProfile(self, **kwargs):
         '''
