@@ -3,6 +3,9 @@ import numpy as np
 from numpy import array
 import matplotlib.pyplot as plt
 from gprIO_MALA import readMALA
+import time
+from scipy.signal import find_peaks
+
 
 class gprpyPlot:
     '''
@@ -31,67 +34,76 @@ class gprpyPlot:
         if file_ext==".rad" or file_ext==".rd3":
             self.data, self.info = readMALA(file_name)
             self.twtt = np.linspace(0,float(self.info["TIMEWINDOW"]),int(self.info["SAMPLES"]))
+            self.samples = int(self.info["SAMPLES"])
             self.profilePos = float(self.info["DISTANCE INTERVAL"])*np.arange(0,self.data.shape[1])
+            self.frequency = float(self.info["FREQUENCY"])
+            self.distance_int = float(self.info["DISTANCE INTERVAL"])
+            self.trace = int(self.info["LAST TRACE"])
             self.velocity = None
             self.depth = None
             self.maxTopo = None
             self.minTopo = None
             self.threeD = None
             self.data_pretopo = None
-            self.twtt_pretopo = None
-            
+            self.twtt_pretopo = None            
         else:
             print("Can only read rad or rd3 files")
     
     # This is a helper function
     def prepProfileFig(self, yrng=None, xrng=None):
         c = 0
+        range_w = []
         traces_found = []
         trace_sample = []
-        max_arr = np.zeros(2096)
-        rows,cols = self.data.shape 
-        for i in range(20,30, 1):
+        max_peaks = np.zeros(self.trace)
+        for i in range(30, 40, 1):
             c+=1
-            sin1 = []
-            prev_z = 0
+            #plt.subplot(40,1,c)
+            sin1 = np.array([])
             range_w =[]
-            plt.subplot(10,1,c)
-            for j in range(0,2096):
-                sin1.append(abs(self.data[j][i]))
-                range_w.append(j*0.04943)
-            sin1 = array(sin1)
-            peaks = np.where((sin1[1:-1] > sin1[0:-2]) * (sin1[1:-1] > sin1[2:]))[0] + 1
-            for z in peaks:
-                if (z-prev_z) > 20 and sin1[z] > 2000:
-                    max_arr[z] = sin1[z]
-            plt.plot(range_w, sin1, 'y-')
+            for j in range(0,self.trace):
+                
+                sin1 = np.append(abs(self.data[j][i]),sin1)
+                range_w.append(j*self.distance_int)   
+            peaks, _ = find_peaks(sin1, height=25000, threshold=70, distance=250, width=50)
+            peaks = peaks.tolist()
+                
+            for p in peaks:
+                max_peaks[p] = sin1[p]
+            
+            #plt.plot( range_w,max_peaks,'b-')
             max_idx = []
-            a = np.nonzero(max_arr)[0]
+            a = np.nonzero(max_peaks)[0]
             max_idx.append(a.tolist())
-        
-            for trace in range(750,900):
+            
+            for trace in range(0,self.trace):
                 if trace in ((max_idx[0])):
-                    if trace not in traces_found:
+                    if trace not in traces_found:                
                         traces_found.append(trace)
-                        trace_sample.append(i)
-                    
-        print(len(traces_found))
-        for i in range (len(traces_found)):
-            print("trace %d first found at %d" %(traces_found[i],trace_sample[i]))
+                        trace_sample.append(float(i*0.0079))
+        
+        for s in range (len(traces_found)):
+            traces_found[s] = traces_found[s]*self.distance_int
 
-        amp = []  ## list to append average amplitude of each trace
-        for i in range(rows):
-            avg = 0
-            for j in range(cols):
-                avg+=(self.data[i][j]) ## absolute value of amplitude at each sample for all traces
-            amp.append(avg/(j+1))
-        trace = []
-        amp_avg = []
-        for i in range(len(amp)):
-            if i%5 == 0:
-                trace.append(i)
-                amp_avg.append(amp[i])
-        return traces_found, trace_sample
+            print("utility found at approx distance %f m and at depth %f m" %(traces_found[s],trace_sample[s]))
+        record_depth = dict(zip(traces_found, trace_sample))
+        new_traces = []
+        new_samples = []
+        for i in sorted(record_depth.keys()):
+            if (i+1)-i>2:
+                print(i,record_depth[i])
+                new_traces.append(i)
+                new_samples.append(record_depth[i])
+
+        print("Showing graph for all utilities")
+        time.sleep(1)
+        plt.bar(traces_found,trace_sample)
+        plt.plot(traces_found,trace_sample,'r*')
+        plt.xlabel("Distance(m)")
+        plt.ylabel("depth(m)")
+        plt.title("GPR Output")
+        plt.show()
+        return self.data, self.info
        
     def showProfile(self, **kwargs):
         '''
