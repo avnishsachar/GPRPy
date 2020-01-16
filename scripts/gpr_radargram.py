@@ -110,7 +110,7 @@ class gprpyProfile:
                 yrng=[self.minTopo-np.max(self.depth),self.maxTopo-np.min(self.depth)]
             
         if xrng is None:
-            xrng=[min(self.profilePos),max(self.profilePos)]       
+            xrng=[min(self.profilePos),max(self.profilePos)]
             print(xrng)
         if yrng is not None:
             plt.ylim(yrng)
@@ -138,4 +138,4 @@ class gprpyProfile:
         plt.show(block=False)
 
 if __name__ == '__main__':
-    gprpyProfile("/home/avnishsachar/GPRPy/gprpy/data/VGT/Profile_0006.rd3")
+    gprpyProfile("/home/omni/Downloads/GPRPy/data/VGT/Profile_0006.rd3")
