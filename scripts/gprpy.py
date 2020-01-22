@@ -2,7 +2,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-from gprTOOLS import dewow
+from gprTOOLS import dewow, profileSmooth
 from gprIO_MALA import readMALA
 
 class gprpyProfile:
@@ -23,8 +23,9 @@ class gprpyProfile:
         self.previous = {}
         if filename is not None:
             self.importdata(filename)
-            # self.setZeroTime(5)
-            # self.dewow(10)
+            self.set_zerotime(3.5)
+            self.dewow_filter(3)
+            self.smooth_profile(7, 7)
             self.showProfile()
             plt.show()          
         
@@ -141,7 +142,7 @@ class gprpyProfile:
         plt.show(block=False)
 
     # Helper Functions
-    def setZeroTime(self,newZeroTime):
+    def set_zerotime(self,newZeroTime):
         '''
         Deletes all data recorded before newZeroTime and 
         sets newZeroTime to zero.
@@ -156,7 +157,7 @@ class gprpyProfile:
         self.twtt[0] = 0
         self.data = self.data[zeroind:,:]
 
-    def dewow(self,window):
+    def dewow_filter(self,window):
         '''
         Subtracts from each sample along each trace an 
         along-time moving average.
@@ -166,6 +167,27 @@ class gprpyProfile:
                    [in "number of samples"]
         '''
         self.data = dewow(self.data,window)
+
+
+    def smooth_profile(self,ntraces,noversample):
+        '''
+        First creates copies of each trace and appends the copies 
+        next to each trace, then replaces each trace with the 
+        average trace over a moving average window.
+        Can be used to smooth-out noisy reflectors appearing 
+        in neighboring traces, or simply to increase the along-profile 
+        resolution by interpolating between the traces.
+        For example: To increase the along-profile resolution smoothly 
+        by a factor of 4: use
+        mygpr.profileSmooth(4,4)
+        INPUT:
+        ntraces         window width [in "number of samples"]; 
+                        over how many traces to take the moving average. 
+        noversample     how many copies of each trace
+        '''
+        self.data,self.profilePos = profileSmooth(self.data,self.profilePos,
+                                                        ntraces,noversample)
+
 
 if __name__ == '__main__':
     gpr = gprpyProfile("../data/VGT/Profile_0006.rd3")
