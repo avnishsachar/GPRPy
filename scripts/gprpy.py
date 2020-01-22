@@ -2,6 +2,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+from gprTOOLS import dewow
 from gprIO_MALA import readMALA
 
 class gprpyProfile:
@@ -22,6 +23,8 @@ class gprpyProfile:
         self.previous = {}
         if filename is not None:
             self.importdata(filename)
+            # self.setZeroTime(5)
+            # self.dewow(10)
             self.showProfile()
             plt.show()          
         
@@ -137,6 +140,33 @@ class gprpyProfile:
         self.prepProfileFig(**kwargs)
         plt.show(block=False)
 
+    # Helper Functions
+    def setZeroTime(self,newZeroTime):
+        '''
+        Deletes all data recorded before newZeroTime and 
+        sets newZeroTime to zero.
+        INPUT:
+        newZeroTime     The new zero-time
+        '''
+        # Find index of value that is nearest to newZeroTime
+        zeroind = np.abs(self.twtt - newZeroTime).argmin() 
+        # Cut out everything before
+        self.twtt = self.twtt[zeroind:] - newZeroTime
+        # Set first value to 0
+        self.twtt[0] = 0
+        self.data = self.data[zeroind:,:]
+
+    def dewow(self,window):
+        '''
+        Subtracts from each sample along each trace an 
+        along-time moving average.
+        Can be used as a low-cut filter.
+        INPUT:
+        window     length of moving average window 
+                   [in "number of samples"]
+        '''
+        self.data = dewow(self.data,window)
+
 if __name__ == '__main__':
-    gprpyProfile("../data/VGT/Profile_0006.rd3")
+    gpr = gprpyProfile("../data/VGT/Profile_0006.rd3")
     
